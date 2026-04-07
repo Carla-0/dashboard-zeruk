@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Zeruk Brokers</title>
+    <!-- FIXED: Changed to UMD bundle for Chart.js 4.x compatibility -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+            gap: 0;
+        }
+
+        /* HEADER */
+        .header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-placeholder {
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-placeholder img {
+            height: 40px;
+            width: auto;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .demo-banner {
+            background: #ff9800;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a237e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .date-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .date-input-group label {
+            font-size: 11px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="date"],
+        select,
+        .multi-select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: inherit;
+            background: white;
+            color: #333;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="date"]:focus,
+        select:focus,
+        .multi-select:focus {
+            outline: none;
+            border-color: #00bcd4;
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+        }
+
+        .quick-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+
+        .quick-btn {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #333;
+        }
+
+        .quick-btn:hover {
+            border-color: #00bcd4;
+            background: #f0f9fa;
+        }
+
+        .quick-btn.active {
+            background: #00bcd4;
+            color: white;
+            border-color: #00bcd4;
+        }
+
+        .filter-select {
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+        }
+
+        .clear-filters-btn {
+            width: 100%;
+            padding: 10px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .clear-filters-btn:hover {
+            background: #d32f2f;
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+        }
+
+        /* MAIN CONTENT */
+        .main {
+            padding: 25px;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        /* KPI CARDS */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: #999;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a237e;
+            margin-bottom: 8px;
+        }
+
+        .kpi-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .kpi-change.positive {
+            color: #4caf50;
+        }
+
+        .kpi-change.negative {
+            color: #f44336;
+        }
+
+        .kpi-arrow {
+            font-size: 14px;
+        }
+
+        /* CHARTS */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+        }
+
+        .chart-card:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a237e;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* DATA TABLE */
+        .table-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .table-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a237e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .table-search {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 12px;
+            width: 200px;
+        }
+
+        .export-btn {
+            padding: 8px 15px;
+            background: #00bcd4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .export-btn:hover {
+            background: #0097a7;
+            box-shadow: 0 2px 8px rgba(0, 188, 212, 0.3);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        thead {
+            background: #f5f5f5;
+            border-bottom: 2px solid #1a237e;
+        }
+
+        th {
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #1a237e;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.3s;
+        }
+
+        th:hover {
+            background: #eeeeee;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tbody tr {
+            transition: background 0.3s;
+        }
+
+        tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button,
+        .pagination span {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pagination button:hover:not(:disabled),
+        .pagination button.active {
+            background: #00bcd4;
+            color: white;
+            border-color: #00bcd4;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .current-page {
+            border: none;
+            background: none;
+            cursor: default;
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                height: 100vh;
+                z-index: 1000;
+                width: 280px;
+                transition: left 0.3s;
+                background: white;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .table-search {
+                width: 100%;
+            }
+        }
+
+        /* LOADING SPINNER */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #00bcd4;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            color: #1a237e;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .mapper-field {
+            margin-bottom: 15px;
+        }
+
+        .mapper-field label {
+            display: block;
+            font-weight: 600;
+            color: #1a237e;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .mapper-field select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .mapper-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .mapper-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: #00bcd4;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0097a7;
+        }
+
+        .btn-secondary {
+            background: #ddd;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #bbb;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+            gap: 15px;
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-placeholder">Z</div>
+                <div class="header-title">
+                    <h1>Zeruk Brokers</h1>
+                    <p>Dashboard de Análisis de Seguros</p>
+                </div>
+            </div>
+            <div class="header-right" id="headerRight"></div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Período</div>
+                <div class="quick-buttons">
+                    <button class="quick-btn" data-period="thisMonth">Este Mes</button>
+                    <button class="quick-btn" data-period="lastMonth">Mes Anterior</button>
+                    <button class="quick-btn" data-period="thisQuarter">Este Trimestre</button>
+                    <button class="quick-btn" data-period="lastQuarter">Trimestre Anterior</button>
+                    <button class="quick-btn" data-period="thisYear">Este Año</button>
+                    <button class="quick-btn" data-period="lastYear">Año Anterior</button>
+                    <button class="quick-btn" data-period="last12Months">Últimos 12 Meses</button>
+                </div>
+
+                <div class="sidebar-title" style="margin-top: 15px;">Rango Personalizado</div>
+                <div class="date-input-group">
+                    <label>Fecha Inicio</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="date-input-group">
+                    <label>Fecha Fin</label>
+                    <input type="date" id="endDate">
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Aseguradora</div>
+                <div class="filter-select" id="aseguradoraFilter"></div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Productor</div>
+                <div class="filter-select" id="producerFilter"></div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Ramo</div>
+                <div class="filter-select" id="ramoFilter"></div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Razón Social</div>
+                <div class="filter-select" id="razonSocialFilter"></div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Tipo de Venta</div>
+                <div class="filter-select" id="tipoVentaFilter"></div>
+            </div>
+
+            <button class="clear-filters-btn">Limpiar Filtros</button>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main">
+            <div id="content">
+                <!-- KPI CARDS -->
+                <div class="kpi-grid" id="kpiGrid"></div>
+
+                <!-- CHARTS -->
+                <div class="charts-grid" id="chartsGrid"></div>
+
+                <!-- DATA TABLE -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3>Datos Detallados</h3>
+                        <div class="table-controls">
+                            <input type="text" class="table-search" id="tableSearch" placeholder="Buscar en tabla...">
+                            <button class="export-btn" id="exportBtn">Descargar CSV</button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th data-field="razonSocial">Razón Social</th>
+                                    <th data-field="aseguradora">Aseguradora</th>
+                                    <th data-field="producer">Productor</th>
+                                    <th data-field="ramo">Ramo</th>
+                                    <th data-field="tipoVenta">Tipo de Venta</th>
+                                    <th data-field="feeNeto">Fee Neto</th>
+                                    <th data-field="primaNetaUsd">Prima Neta USD</th>
+                                    <th data-field="inicioVigencia">Inicio Vigencia</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COLUMN MAPPER MODAL -->
+    <div id="mapperModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Mapeo de Columnas</h2>
+                <button class="close-btn" id="closeMapperBtn">&times;</button>
+            </div>
+            <p style="margin-bottom: 20px; color: #666; font-size: 12px;">Por favor, asigna las columnas de tu archivo a los campos esperados:</p>
+            <div id="mapperFields"></div>
+            <div class="mapper-buttons">
+                <button class="btn-secondary" id="cancelMapperBtn">Cancelar</button>
+                <button class="btn-primary" id="submitMapperBtn">Aplicar Mapeo</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION & STATE
+        // ============================================
+        const CONFIG = {
+            primaryColor: '#1a237e',
+            accentColor: '#00bcd4',
+            colors: ['#1a237e', '#00bcd4', '#ff9800', '#f44336', '#4caf50', '#9c27b0', '#e91e63', '#009688'],
+            dateFormat: 'YYYY-MM-DD',
+            currencyFormat: new Intl.NumberFormat('es-AR', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })
+        };
+
+        let state = {
+            rawData: [],
+            filteredData: [],
+            columnMapping: null,
+            filters: {
+                startDate: null,
+                endDate: null,
+                aseguradora: [],
+                producer: [],
+                ramo: [],
+                razonSocial: [],
+                tipoVenta: []
+            },
+            currentPage: 1,
+            itemsPerPage: 25,
+            sortField: null,
+            sortDirection: 'asc',
+            isDemoMode: false,
+            previousPeriodData: []
+        };
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function formatCurrency(value) {
+            if (isNaN(value)) return '$0.00';
+            return CONFIG.currencyFormat.format(value);
+        }
+
+        function formatDate(date) {
+            if (!date) return '';
+            if (typeof date === 'string') {
+                return date.split('T')[0];
+            }
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function parseDate(dateString) {
+            if (!dateString) return null;
+            const date = new Date(dateString + 'T00:00:00Z');
+            return isNaN(date.getTime()) ? null : date;
+        }
+
+        function normalizeColumnName(str) {
+            return str.toLowerCase().replace(/[_\s]/g, '');
+        }
+
+        function findColumnByPatterns(columns, patterns) {
+            for (const pattern of patterns) {
+                const normalized = normalizeColumnName(pattern);
+                for (const col of columns) {
+                    if (normalizeColumnName(col) === normalized) {
+                        return col;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function getDateRange(period) {
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const currentMonth = today.getMonth();
+            let startDate, endDate;
+
+            const isThisMonth = today.getDate() <= 28;
+            const thisMonthStart = new Date(currentYear, currentMonth, 1);
+            const thisMonthEnd = new Date(currentYear, currentMonth + 1, 0);
+
+            switch (period) {
+                case 'thisMonth':
+                    startDate = thisMonthStart;
+                    endDate = thisMonthEnd;
+                    break;
+                case 'lastMonth':
+                    startDate = new Date(currentYear, currentMonth - 1, 1);
+                    endDate = new Date(currentYear, currentMonth, 0);
+                    break;
+                case 'thisQuarter':
+                    const quarter = Math.floor(currentMonth / 3);
+                    startDate = new Date(currentYear, quarter * 3, 1);
+                    endDate = new Date(currentYear, quarter * 3 + 3, 0);
+                    break;
+                case 'lastQuarter':
+                    const lastQuarter = Math.floor(currentMonth / 3) - 1;
+                    startDate = new Date(currentYear, lastQuarter * 3, 1);
+                    endDate = new Date(currentYear, lastQuarter * 3 + 3, 0);
+                    break;
+                case 'thisYear':
+                    startDate = new Date(currentYear, 0, 1);
+                    endDate = new Date(currentYear, 11, 31);
+                    break;
+                case 'lastYear':
+                    startDate = new Date(currentYear - 1, 0, 1);
+                    endDate = new Date(currentYear - 1, 11, 31);
+                    break;
+                case 'last12Months':
+                    endDate = new Date();
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 11, today.getDate());
+                    break;
+                default:
+                    return null;
+            }
+
+            return { startDate, endDate };
+        }
+
+        function getPreviousPeriod(startDate, endDate) {
+            const periodDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+            const newEndDate = new Date(startDate);
+            newEndDate.setDate(newEndDate.getDate() - 1);
+            const newStartDate = new Date(newEndDate);
+            newStartDate.setDate(newStartDate.getDate() - periodDays);
+            return { startDate: newStartDate, endDate: newEndDate };
+        }
+
+        // ============================================
+        // DATA LOADING & MAPPING
+        // ============================================
+        function detectColumns(columns) {
+            const mapping = {
+                feeNeto: null,
+                primaNetaUsd: null,
+                aseguradora: null,
+                producer: null,
+                ramo: null,
+                razonSocial: null,
+                tipoVenta: null,
+                inicioVigencia: null
+            };
+
+            mapping.feeNeto = findColumnByPatterns(columns, ['DashbordLkFeeNetoUSD', 'Fee Neto', 'fee_neto', 'FeeNeto', 'Fee']);
+            mapping.primaNetaUsd = findColumnByPatterns(columns, ['DashbordLkPrimaNetaUSD', 'Prima Neta USD', 'prima_neta_usd', 'PrimaNetaUSD', 'Prima', 'PrimaNeta']);
+            mapping.aseguradora = findColumnByPatterns(columns, ['DashbordLkAseguradora', 'Aseguradora', 'aseguradora', 'Insurance', 'Seguros']);
+            mapping.producer = findColumnByPatterns(columns, ['DashbordLkProducer', 'Producer', 'producer', 'Productor', 'productor', 'Corredor']);
+            mapping.ramo = findColumnByPatterns(columns, ['DashbordLkRamo', 'Ramo', 'ramo', 'Line', 'Branch']);
+            mapping.razonSocial = findColumnByPatterns(columns, ['DashbordLkRazonSocial', 'Razon Social', 'razon_social', 'RazonSocial', 'ClientName', 'Client']);
+            mapping.tipoVenta = findColumnByPatterns(columns, ['DashbordLkTipoVenta', 'Tipo de Venta', 'tipo_venta', 'TipoVenta', 'SaleType', 'Type']);
+            mapping.inicioVigencia = findColumnByPatterns(columns, ['DashbordLkInicioVigencia', 'Inicio de Vigencia', 'inicio_vigencia', 'InicioVigencia', 'StartDate', 'FechaInicio']);
+
+            return mapping;
+        }
+
+        function showMapperModal(columns) {
+            const mapping = detectColumns(columns);
+            const allMapped = Object.values(mapping).every(v => v !== null);
+
+            if (!allMapped) {
+                const mapperFields = document.getElementById('mapperFields');
+                mapperFields.innerHTML = '';
+
+                for (const [field, currentMapping] of Object.entries(mapping)) {
+                    const div = document.createElement('div');
+                    div.className = 'mapper-field';
+                    div.innerHTML = `
+                        <label>${getFieldLabel(field)}</label>
+                        <select data-field="${field}">
+                            <option value="">-- Seleccionar --</option>
+                            ${columns.map(col => `<option value="${col}" ${currentMapping === col ? 'selected' : ''}>${col}</option>`).join('')}
+                        </select>
+                    `;
+                    mapperFields.appendChild(div);
+                }
+
+                document.getElementById('mapperModal').style.display = 'block';
+            } else {
+                state.columnMapping = mapping;
+                processData();
+            }
+        }
+
+        function getFieldLabel(field) {
+            const labels = {
+                feeNeto: 'Fee Neto',
+                primaNetaUsd: 'Prima Neta USD',
+                aseguradora: 'Aseguradora',
+                producer: 'Productor',
+                ramo: 'Ramo',
+                razonSocial: 'Razón Social',
+                tipoVenta: 'Tipo de Venta',
+                inicioVigencia: 'Inicio de Vigencia'
+            };
+            return labels[field] || field;
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch('dashboard_data.json');
+                if (!response.ok) {
+                    throw new Error('No se pudo cargar dashboard_data.json');
+                }
+                const data = await response.json();
+                state.rawData = data.data || [];
+                showMapperModal(data.metadata?.columns || Object.keys(state.rawData[0] || {}));
+            } catch (error) {
+                console.warn('Usando datos de demo:', error.message);
+                generateDemoData();
+            }
+        }
+
+        function generateDemoData() {
+            state.isDemoMode = true;
+            const aseguradoras = ['Seguros La Mejor', 'Provincial', 'MAPFRE', 'Allianz', 'Berkley', 'Zurich', 'Liberty', 'Mercantil'];
+            const productores = ['Juan López', 'María García', 'Carlos Martínez', 'Ana Rodríguez', 'Miguel Pérez'];
+            const ramos = ['Responsabilidad Civil', 'Incendio', 'Robo', 'Automóvil', 'Médicos', 'Equipos', 'Accidentes Personales'];
+            const tiposVenta = ['Nueva', 'Renovación'];
+            const razonSocial = ['Empresa A', 'Empresa B', 'Empresa C', 'Empresa D', 'Empresa E', 'Empresa F', 'Empresa G'];
+
+            const data = [];
+            const startDate = new Date('2025-01-01');
+            const endDate = new Date('2026-04-07');
+
+            for (let i = 0; i < 500; i++) {
+                const randomDate = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime()));
+                data.push({
+                    'Fee Neto': Math.round(Math.random() * 50000 + 5000),
+                    'Prima Neta USD': Math.round(Math.random() * 500000 + 50000),
+                    'Aseguradora': aseguradoras[Math.floor(Math.random() * aseguradoras.length)],
+                    'Producer': productores[Math.floor(Math.random() * productores.length)],
+                    'Ramo': ramos[Math.floor(Math.random() * ramos.length)],
+                    'Razon Social': razonSocial[Math.floor(Math.random() * razonSocial.length)],
+                    'Tipo de Venta': tiposVenta[Math.floor(Math.random() * tiposVenta.length)],
+                    'Inicio de Vigencia': formatDate(randomDate)
+                });
+            }
+
+            state.rawData = data;
+
+            const headerRight = document.getElementById('headerRight');
+            const banner = document.createElement('div');
+            banner.className = 'demo-banner';
+            banner.textContent = 'Modo Demo - Ejecuta extract_data.py para cargar datos reales';
+            headerRight.appendChild(banner);
+
+            showMapperModal(Object.keys(data[0]));
+        }
+
+        // ============================================
+        // DATA PROCESSING & FILTERING
+        // ============================================
+        function processData() {
+            if (!state.columnMapping) return;
+
+            // Normalize data with mapping
+            const normalizedData = state.rawData.map(row => {
+                const mapped = {};
+                for (const [field, colName] of Object.entries(state.columnMapping)) {
+                    if (colName && row.hasOwnProperty(colName)) {
+                        mapped[field] = row[colName];
+                    }
+                }
+                return mapped;
+            });
+
+            state.rawData = normalizedData;
+            // FIXED: Call updateFiltersUI() BEFORE applyFilters() to ensure filters UI is populated
+            updateFiltersUI();
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let filtered = state.rawData.filter(row => {
+                if (state.filters.startDate) {
+                    const rowDate = parseDate(row.inicioVigencia);
+                    if (!rowDate || rowDate < state.filters.startDate) return false;
+                }
+
+                if (state.filters.endDate) {
+                    const rowDate = parseDate(row.inicioVigencia);
+                    if (!rowDate || rowDate > state.filters.endDate) return false;
+                }
+
+                if (state.filters.aseguradora.length > 0 && !state.filters.aseguradora.includes(row.aseguradora)) {
+                    return false;
+                }
+
+                if (state.filters.producer.length > 0 && !state.filters.producer.includes(row.producer)) {
+                    return false;
+                }
+
+                if (state.filters.ramo.length > 0 && !state.filters.ramo.includes(row.ramo)) {
+                    return false;
+                }
+
+                if (state.filters.razonSocial.length > 0 && !state.filters.razonSocial.includes(row.razonSocial)) {
+                    return false;
+                }
+
+                if (state.filters.tipoVenta.length > 0 && !state.filters.tipoVenta.includes(row.tipoVenta)) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            state.filteredData = filtered;
+            state.currentPage = 1;
+            updateDashboard();
+        }
+
+        function getDataForPeriod(startDate, endDate) {
+            return state.rawData.filter(row => {
+                const rowDate = parseDate(row.inicioVigencia);
+                if (!rowDate) return false;
+                return rowDate >= startDate && rowDate <= endDate;
+            });
+        }
+
+        // ============================================
+        // KPI CALCULATIONS
+        // ============================================
+        function calculateKPIs() {
+            const current = state.filteredData;
+            const previous = state.previousPeriodData;
+
+            const currentKPIs = {
+                totalFee: current.reduce((sum, row) => sum + (parseFloat(row.feeNeto) || 0), 0),
+                totalPrima: current.reduce((sum, row) => sum + (parseFloat(row.primaNetaUsd) || 0), 0),
+                count: current.length,
+                avgFee: current.length > 0 ? current.reduce((sum, row) => sum + (parseFloat(row.feeNeto) || 0), 0) / current.length : 0
+            };
+
+            const previousKPIs = {
+                totalFee: previous.reduce((sum, row) => sum + (parseFloat(row.feeNeto) || 0), 0),
+                totalPrima: previous.reduce((sum, row) => sum + (parseFloat(row.primaNetaUsd) || 0), 0),
+                count: previous.length,
+                avgFee: previous.length > 0 ? previous.reduce((sum, row) => sum + (parseFloat(row.feeNeto) || 0), 0) / previous.length : 0
+            };
+
+            return { currentKPIs, previousKPIs };
+        }
+
+        function getChangePercent(current, previous) {
+            if (previous === 0) return current > 0 ? 100 : 0;
+            return ((current - previous) / previous) * 100;
+        }
+
+        // ============================================
+        // RENDERING FUNCTIONS
+        // ============================================
+        function renderKPIs() {
+            const { currentKPIs, previousKPIs } = calculateKPIs();
+            const kpiGrid = document.getElementById('kpiGrid');
+            kpiGrid.innerHTML = '';
+
+            const kpis = [
+                {
+                    label: 'Fee Neto Total',
+                    value: formatCurrency(currentKPIs.totalFee),
+                    change: getChangePercent(currentKPIs.totalFee, previousKPIs.totalFee)
+                },
+                {
+                    label: 'Prima Neta USD Total',
+                    value: formatCurrency(currentKPIs.totalPrima),
+                    change: getChangePercent(currentKPIs.totalPrima, previousKPIs.totalPrima)
+                },
+                {
+                    label: 'Cantidad de Pólizas',
+                    value: currentKPIs.count.toLocaleString('es-AR'),
+                    change: getChangePercent(currentKPIs.count, previousKPIs.count)
+                },
+                {
+                    label: 'Fee Neto Promedio',
+                    value: formatCurrency(currentKPIs.avgFee),
+                    change: getChangePercent(currentKPIs.avgFee, previousKPIs.avgFee)
+                }
+            ];
+
+            kpis.forEach(kpi => {
+                const card = document.createElement('div');
+                card.className = 'kpi-card';
+                const isPositive = kpi.change >= 0;
+                const arrow = isPositive ? '▲' : '▼';
+                card.innerHTML = `
+                    <div class="kpi-label">${kpi.label}</div>
+                    <div class="kpi-value">${kpi.value}</div>
+                    <div class="kpi-change ${isPositive ? 'positive' : 'negative'}">
+                        <span class="kpi-arrow">${arrow}</span>
+                        <span>${Math.abs(kpi.change).toFixed(1)}% vs período anterior</span>
+                    </div>
+                `;
+                kpiGrid.appendChild(card);
+            });
+        }
+
+        function renderCharts() {
+            // FIXED: Added safety check for Chart.js availability at the beginning
+            if (typeof Chart === 'undefined') {
+                const chartsGrid = document.getElementById('chartsGrid');
+                chartsGrid.innerHTML = '<div class="no-data">Chart.js no está disponible. Por favor, recargue la página.</div>';
+                return;
+            }
+
+            const chartsGrid = document.getElementById('chartsGrid');
+            chartsGrid.innerHTML = '';
+
+            // Top 10 by Aseguradora
+            chartsGrid.appendChild(createChartCard('Fees y Primas por Aseguradora (Top 10)', 'chartAseguradora', 'bar'));
+
+            // Top 10 by Producer
+            chartsGrid.appendChild(createChartCard('Fees y Primas por Productor (Top 10)', 'chartProducer', 'bar'));
+
+            // Distribution by Ramo
+            chartsGrid.appendChild(createChartCard('Distribución por Ramo', 'chartRamo', 'doughnut'));
+
+            // Distribution by Tipo de Venta
+            chartsGrid.appendChild(createChartCard('Distribución por Tipo de Venta', 'chartTipoVenta', 'doughnut'));
+
+            // Monthly Trend
+            chartsGrid.appendChild(createChartCard('Tendencia Mensual', 'chartTrend', 'line'));
+
+            // Period Comparison
+            chartsGrid.appendChild(createChartCard('Comparación: Período Actual vs Anterior', 'chartComparison', 'bar'));
+
+            drawCharts();
+        }
+
+        function createChartCard(title, canvasId, type) {
+            const card = document.createElement('div');
+            card.className = 'chart-card';
+            card.innerHTML = `
+                <div class="chart-title">${title}</div>
+                <div class="chart-container">
+                    <canvas id="${canvasId}"></canvas>
+                </div>
+            `;
+            return card;
+        }
+
+        function drawCharts() {
+            // FIXED: Added comprehensive check for Chart.js availability before drawing charts
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not available. Charts will not be rendered.');
+                return;
+            }
+
+            const chartConfigs = {
+                chartAseguradora: createAseguradoraChart(),
+                chartProducer: createProducerChart(),
+                chartRamo: createRamoChart(),
+                chartTipoVenta: createTipoVentaChart(),
+                chartTrend: createTrendChart(),
+                chartComparison: createComparisonChart()
+            };
+
+            // Destroy existing charts
+            window.charts = window.charts || {};
+            Object.keys(chartConfigs).forEach(key => {
+                if (window.charts[key]) {
+                    window.charts[key].destroy();
+                }
+            });
+
+            // Create new charts
+            Object.entries(chartConfigs).forEach(([canvasId, config]) => {
+                const ctx = document.getElementById(canvasId);
+                if (ctx) {
+                    window.charts[canvasId] = new Chart(ctx, config);
+                }
+            });
+        }
+
+        function createAseguradoraChart() {
+            const grouped = {};
+            state.filteredData.forEach(row => {
+                if (!grouped[row.aseguradora]) {
+                    grouped[row.aseguradora] = { fee: 0, prima: 0 };
+                }
+                grouped[row.aseguradora].fee += parseFloat(row.feeNeto) || 0;
+                grouped[row.aseguradora].prima += parseFloat(row.primaNetaUsd) || 0;
+            });
+
+            const sorted = Object.entries(grouped).sort((a, b) => b[1].fee - a[1].fee).slice(0, 10);
+            const labels = sorted.map(([name]) => name);
+            const feeData = sorted.map(([, data]) => data.fee);
+            const primaData = sorted.map(([, data]) => data.prima);
+
+            return {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Fee Neto',
+                            data: feeData,
+                            backgroundColor: CONFIG.primaryColor,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Prima Neta USD',
+                            data: primaData,
+                            backgroundColor: CONFIG.accentColor,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: { font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: val => `$${(val / 1000).toFixed(0)}k`
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        function createProducerChart() {
+            const grouped = {};
+            state.filteredData.forEach(row => {
+                if (!grouped[row.producer]) {
+                    grouped[row.producer] = { fee: 0, prima: 0 };
+                }
+                grouped[row.producer].fee += parseFloat(row.feeNeto) || 0;
+                grouped[row.producer].prima += parseFloat(row.primaNetaUsd) || 0;
+            });
+
+            const sorted = Object.entries(grouped).sort((a, b) => b[1].fee - a[1].fee).slice(0, 10);
+            const labels = sorted.map(([name]) => name);
+            const feeData = sorted.map(([, data]) => data.fee);
+            const primaData = sorted.map(([, data]) => data.prima);
+
+            return {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Fee Neto',
+                            data: feeData,
+                            backgroundColor: CONFIG.primaryColor,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Prima Neta USD',
+                            data: primaData,
+                            backgroundColor: CONFIG.accentColor,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: { font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: val => `$${(val / 1000).toFixed(0)}k`
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        function createRamoChart() {
+            const grouped = {};
+            state.filteredData.forEach(row => {
+                if (!grouped[row.ramo]) {
+                    grouped[row.ramo] = 0;
+                }
+                grouped[row.ramo] += parseFloat(row.feeNeto) || 0;
+            });
+
+            const labels = Object.keys(grouped);
+            const data = Object.values(grouped);
+
+            return {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: CONFIG.colors.slice(0, labels.length)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.label}: ${formatCurrency(ctx.parsed)}`
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        function createTipoVentaChart() {
+            const grouped = {};
+            state.filteredData.forEach(row => {
+                if (!grouped[row.tipoVenta]) {
+                    grouped[row.tipoVenta] = 0;
+                }
+                grouped[row.tipoVenta] += 1;
+            });
+
+            const labels = Object.keys(grouped);
+            const data = Object.values(grouped);
+
+            return {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: [CONFIG.primaryColor, CONFIG.accentColor, ...CONFIG.colors.slice(2)]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.label}: ${ctx.parsed} pólizas`
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        function createTrendChart() {
+            const monthlyData = {};
+            state.filteredData.forEach(row => {
+                const date = parseDate(row.inicioVigencia);
+                if (date) {
+                    const monthKey = date.toISOString().slice(0, 7);
+                    if (!monthlyData[monthKey]) {
+                        monthlyData[monthKey] = { fee: 0, prima: 0 };
+                    }
+                    monthlyData[monthKey].fee += parseFloat(row.feeNeto) || 0;
+                    monthlyData[monthKey].prima += parseFloat(row.primaNetaUsd) || 0;
+                }
+            });
+
+            const labels = Object.keys(monthlyData).sort();
+            const feeData = labels.map(key => monthlyData[key].fee);
+            const primaData = labels.map(key => monthlyData[key].prima);
+
+            return {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Fee Neto',
+                            data: feeData,
+                            borderColor: CONFIG.primaryColor,
+                            backgroundColor: 'rgba(26, 35, 126, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Prima Neta USD',
+                            data: primaData,
+                            borderColor: CONFIG.accentColor,
+                            backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: val => `$${(val / 1000).toFixed(0)}k`
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        function createComparisonChart() {
+            const { currentKPIs, previousKPIs } = calculateKPIs();
+
+            return {
+                type: 'bar',
+                data: {
+                    labels: ['Fee Neto Total', 'Prima Neta Total', 'Fee Promedio'],
+                    datasets: [
+                        {
+                            label: 'Período Actual',
+                            data: [currentKPIs.totalFee, currentKPIs.totalPrima, currentKPIs.avgFee],
+                            backgroundColor: CONFIG.primaryColor,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Período Anterior',
+                            data: [previousKPIs.totalFee, previousKPIs.totalPrima, previousKPIs.avgFee],
+                            backgroundColor: CONFIG.accentColor,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: val => `$${(val / 1000).toFixed(0)}k`
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        function renderDataTable() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            const sortedData = state.filteredData.slice();
+            if (state.sortField) {
+                sortedData.sort((a, b) => {
+                    let aVal = a[state.sortField];
+                    let bVal = b[state.sortField];
+
+                    if (!isNaN(aVal) && !isNaN(bVal)) {
+                        aVal = parseFloat(aVal);
+                        bVal = parseFloat(bVal);
+                    }
+
+                    if (state.sortDirection === 'asc') {
+                        return aVal > bVal ? 1 : -1;
+                    } else {
+                        return aVal < bVal ? 1 : -1;
+                    }
+                });
+            }
+
+            const start = (state.currentPage - 1) * state.itemsPerPage;
+            const end = start + state.itemsPerPage;
+            const pageData = sortedData.slice(start, end);
+
+            pageData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.razonSocial || '-'}</td>
+                    <td>${row.aseguradora || '-'}</td>
+                    <td>${row.producer || '-'}</td>
+                    <td>${row.ramo || '-'}</td>
+                    <td>${row.tipoVenta || '-'}</td>
+                    <td>${formatCurrency(row.feeNeto)}</td>
+                    <td>${formatCurrency(row.primaNetaUsd)}</td>
+                    <td>${formatDate(row.inicioVigencia)}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            renderPagination(sortedData.length);
+        }
+
+        function renderPagination(totalItems) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            const totalPages = Math.ceil(totalItems / state.itemsPerPage);
+
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '< Anterior';
+            prevBtn.disabled = state.currentPage === 1;
+            prevBtn.onclick = () => {
+                if (state.currentPage > 1) {
+                    state.currentPage--;
+                    renderDataTable();
+                }
+            };
+            pagination.appendChild(prevBtn);
+
+            for (let i = Math.max(1, state.currentPage - 2); i <= Math.min(totalPages, state.currentPage + 2); i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = i === state.currentPage ? 'active' : '';
+                btn.onclick = () => {
+                    state.currentPage = i;
+                    renderDataTable();
+                };
+                pagination.appendChild(btn);
+            }
+
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Siguiente >';
+            nextBtn.disabled = state.currentPage === totalPages;
+            nextBtn.onclick = () => {
+                if (state.currentPage < totalPages) {
+                    state.currentPage++;
+                    renderDataTable();
+                }
+            };
+            pagination.appendChild(nextBtn);
+        }
+
+        function updateFiltersUI() {
+            const uniqueValues = {
+                aseguradora: [...new Set(state.rawData.map(r => r.aseguradora).filter(Boolean))].sort(),
+                producer: [...new Set(state.rawData.map(r => r.producer).filter(Boolean))].sort(),
+                ramo: [...new Set(state.rawData.map(r => r.ramo).filter(Boolean))].sort(),
+                razonSocial: [...new Set(state.rawData.map(r => r.razonSocial).filter(Boolean))].sort(),
+                tipoVenta: [...new Set(state.rawData.map(r => r.tipoVenta).filter(Boolean))].sort()
+            };
+
+            ['aseguradora', 'producer', 'ramo', 'razonSocial', 'tipoVenta'].forEach(field => {
+                const container = document.getElementById(`${field}Filter`);
+                container.innerHTML = '';
+                uniqueValues[field].forEach(value => {
+                    const label = document.createElement('label');
+                    label.className = 'filter-option';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = value;
+                    checkbox.checked = state.filters[field].includes(value);
+                    checkbox.onchange = () => {
+                        if (checkbox.checked) {
+                            state.filters[field].push(value);
+                        } else {
+                            state.filters[field] = state.filters[field].filter(v => v !== value);
+                        }
+                        applyFilters();
+                    };
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(value));
+                    container.appendChild(label);
+                });
+            });
+        }
+
+        function updateDashboard() {
+            renderKPIs();
+            renderCharts();
+            renderDataTable();
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        function initEventListeners() {
+            // Quick period buttons
+            document.querySelectorAll('.quick-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const period = btn.dataset.period;
+                    const range = getDateRange(period);
+                    if (range) {
+                        state.filters.startDate = range.startDate;
+                        state.filters.endDate = range.endDate;
+                        document.getElementById('startDate').value = formatDate(range.startDate);
+                        document.getElementById('endDate').value = formatDate(range.endDate);
+
+                        const prevPeriod = getPreviousPeriod(range.startDate, range.endDate);
+                        state.previousPeriodData = getDataForPeriod(prevPeriod.startDate, prevPeriod.endDate);
+
+                        applyFilters();
+                    }
+                });
+            });
+
+            // Date inputs
+            document.getElementById('startDate').addEventListener('change', (e) => {
+                document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+                state.filters.startDate = parseDate(e.target.value);
+
+                const endDateInput = document.getElementById('endDate').value;
+                if (endDateInput) {
+                    state.filters.endDate = parseDate(endDateInput);
+                    if (state.filters.startDate && state.filters.endDate) {
+                        const prevPeriod = getPreviousPeriod(state.filters.startDate, state.filters.endDate);
+                        state.previousPeriodData = getDataForPeriod(prevPeriod.startDate, prevPeriod.endDate);
+                    }
+                }
+                applyFilters();
+            });
+
+            document.getElementById('endDate').addEventListener('change', (e) => {
+                document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+                state.filters.endDate = parseDate(e.target.value);
+
+                const startDateInput = document.getElementById('startDate').value;
+                if (startDateInput) {
+                    state.filters.startDate = parseDate(startDateInput);
+                    if (state.filters.startDate && state.filters.endDate) {
+                        const prevPeriod = getPreviousPeriod(state.filters.startDate, state.filters.endDate);
+                        state.previousPeriodData = getDataForPeriod(prevPeriod.startDate, prevPeriod.endDate);
+                    }
+                }
+                applyFilters();
+            });
+
+            // Clear filters
+            document.querySelector('.clear-filters-btn').addEventListener('click', () => {
+                state.filters = {
+                    startDate: null,
+                    endDate: null,
+                    aseguradora: [],
+                    producer: [],
+                    ramo: [],
+                    razonSocial: [],
+                    tipoVenta: []
+                };
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+                document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.filter-option input[type="checkbox"]').forEach(cb => cb.checked = false);
+                state.previousPeriodData = [];
+                applyFilters();
+            });
+
+            // Column mapper modal
+            document.getElementById('submitMapperBtn').addEventListener('click', () => {
+                const mapping = {};
+                document.querySelectorAll('#mapperFields select').forEach(select => {
+                    const field = select.dataset.field;
+                    const value = select.value;
+                    mapping[field] = value || null;
+                });
+                state.columnMapping = mapping;
+                document.getElementById('mapperModal').style.display = 'none';
+                processData();
+            });
+
+            document.getElementById('closeMapperBtn').addEventListener('click', () => {
+                document.getElementById('mapperModal').style.display = 'none';
+            });
+
+            document.getElementById('cancelMapperBtn').addEventListener('click', () => {
+                document.getElementById('mapperModal').style.display = 'none';
+            });
+
+            // Table search
+            document.getElementById('tableSearch').addEventListener('keyup', (e) => {
+                const query = e.target.value.toLowerCase();
+                const filtered = state.filteredData.filter(row => {
+                    return Object.values(row).some(val => String(val).toLowerCase().includes(query));
+                });
+
+                const tableBody = document.getElementById('tableBody');
+                tableBody.innerHTML = '';
+                filtered.slice((state.currentPage - 1) * state.itemsPerPage, state.currentPage * state.itemsPerPage).forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.razonSocial || '-'}</td>
+                        <td>${row.aseguradora || '-'}</td>
+                        <td>${row.producer || '-'}</td>
+                        <td>${row.ramo || '-'}</td>
+                        <td>${row.tipoVenta || '-'}</td>
+                        <td>${formatCurrency(row.feeNeto)}</td>
+                        <td>${formatCurrency(row.primaNetaUsd)}</td>
+                        <td>${formatDate(row.inicioVigencia)}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            });
+
+            // Table sorting
+            document.querySelectorAll('#dataTable th').forEach(th => {
+                th.addEventListener('click', () => {
+                    const field = th.dataset.field;
+                    if (state.sortField === field) {
+                        state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        state.sortField = field;
+                        state.sortDirection = 'asc';
+                    }
+                    renderDataTable();
+                });
+            });
+
+            // Export to CSV
+            document.getElementById('exportBtn').addEventListener('click', () => {
+                const csv = [
+                    ['Razón Social', 'Aseguradora', 'Productor', 'Ramo', 'Tipo de Venta', 'Fee Neto', 'Prima Neta USD', 'Inicio Vigencia'],
+                    ...state.filteredData.map(row => [
+                        row.razonSocial || '',
+                        row.aseguradora || '',
+                        row.producer || '',
+                        row.ramo || '',
+                        row.tipoVenta || '',
+                        row.feeNeto || '',
+                        row.primaNetaUsd || '',
+                        row.inicioVigencia || ''
+                    ])
+                ].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `dashboard_export_${formatDate(new Date())}.csv`;
+                link.click();
+            });
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            initEventListeners();
+        });
+    </script>
+</body>
+</html>

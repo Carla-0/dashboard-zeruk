@@ -930,14 +930,14 @@
                 inicioVigencia: null
             };
 
-            mapping.feeNeto = findColumnByPatterns(columns, ['Fee Neto', 'fee_neto', 'FeeNeto', 'Fee']);
-            mapping.primaNetaUsd = findColumnByPatterns(columns, ['Prima Neta USD', 'prima_neta_usd', 'PrimaNetaUSD', 'Prima', 'PrimaNeta']);
-            mapping.aseguradora = findColumnByPatterns(columns, ['Aseguradora', 'aseguradora', 'Insurance', 'Seguros']);
-            mapping.producer = findColumnByPatterns(columns, ['Producer', 'producer', 'Productor', 'productor', 'Corredor']);
-            mapping.ramo = findColumnByPatterns(columns, ['Ramo', 'ramo', 'Line', 'Branch']);
-            mapping.razonSocial = findColumnByPatterns(columns, ['Razon Social', 'razon_social', 'RazonSocial', 'ClientName', 'Client']);
-            mapping.tipoVenta = findColumnByPatterns(columns, ['Tipo de Venta', 'tipo_venta', 'TipoVenta', 'SaleType', 'Type']);
-            mapping.inicioVigencia = findColumnByPatterns(columns, ['Inicio de Vigencia', 'inicio_vigencia', 'InicioVigencia', 'StartDate', 'FechaInicio']);
+            mapping.feeNeto = findColumnByPatterns(columns, ['DashbordLkFeeNetoUSD', 'Fee Neto', 'fee_neto', 'FeeNeto', 'Fee']);
+            mapping.primaNetaUsd = findColumnByPatterns(columns, ['DashbordLkPrimaNetaUSD', 'Prima Neta USD', 'prima_neta_usd', 'PrimaNetaUSD', 'Prima', 'PrimaNeta']);
+            mapping.aseguradora = findColumnByPatterns(columns, ['DashbordLkAseguradora', 'Aseguradora', 'aseguradora', 'Insurance', 'Seguros']);
+            mapping.producer = findColumnByPatterns(columns, ['DashbordLkProducer', 'Producer', 'producer', 'Productor', 'productor', 'Corredor']);
+            mapping.ramo = findColumnByPatterns(columns, ['DashbordLkRamo', 'Ramo', 'ramo', 'Line', 'Branch']);
+            mapping.razonSocial = findColumnByPatterns(columns, ['DashbordLkRazonSocial', 'Razon Social', 'razon_social', 'RazonSocial', 'ClientName', 'Client']);
+            mapping.tipoVenta = findColumnByPatterns(columns, ['DashbordLkTipoVenta', 'Tipo de Venta', 'tipo_venta', 'TipoVenta', 'SaleType', 'Type']);
+            mapping.inicioVigencia = findColumnByPatterns(columns, ['DashbordLkInicioVigencia', 'Inicio de Vigencia', 'inicio_vigencia', 'InicioVigencia', 'StartDate', 'FechaInicio']);
 
             return mapping;
         }
@@ -994,7 +994,7 @@
                 generateDemoData();
             }
         }
-        
+
         const EMBEDDED_DATA = {
   "metadata": {
     "table": "DashbordLk",
