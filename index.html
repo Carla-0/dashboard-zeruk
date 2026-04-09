@@ -838,7 +838,16 @@
 
         function parseDate(dateString) {
             if (!dateString) return null;
-            const date = new Date(dateString + 'T00:00:00Z');
+            // Tomar solo la parte de fecha (ignorar hora) y parsear como fecha LOCAL
+            // para evitar problemas de zona horaria
+            const datePart = String(dateString).split('T')[0];
+            const parts = datePart.split('-');
+            if (parts.length !== 3) return null;
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10);
+            const day = parseInt(parts[2], 10);
+            if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+            const date = new Date(year, month - 1, day);
             return isNaN(date.getTime()) ? null : date;
         }
 
@@ -50774,7 +50783,7 @@
             state.filteredData.forEach(row => {
                 const date = parseDate(row.inicioVigencia);
                 if (date) {
-                    const monthKey = date.toISOString().slice(0, 7);
+                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
                     if (!monthlyData[monthKey]) {
                         monthlyData[monthKey] = { fee: 0, prima: 0 };
                     }
