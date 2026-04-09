@@ -183,6 +183,26 @@
             margin-bottom: 8px;
         }
 
+        .filter-search {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 12px;
+            margin-bottom: 6px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .filter-search:focus {
+            border-color: #00bcd4;
+        }
+
+        .filter-option.hidden {
+            display: none;
+        }
+
         .filter-option {
             display: flex;
             align-items: center;
@@ -695,26 +715,31 @@
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Aseguradora</div>
+                <input type="text" class="filter-search" data-target="aseguradoraFilter" placeholder="Buscar aseguradora...">
                 <div class="filter-select" id="aseguradoraFilter"></div>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Productor</div>
+                <input type="text" class="filter-search" data-target="producerFilter" placeholder="Buscar productor...">
                 <div class="filter-select" id="producerFilter"></div>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Ramo</div>
+                <input type="text" class="filter-search" data-target="ramoFilter" placeholder="Buscar ramo...">
                 <div class="filter-select" id="ramoFilter"></div>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Razón Social</div>
+                <input type="text" class="filter-search" data-target="razonSocialFilter" placeholder="Buscar razón social...">
                 <div class="filter-select" id="razonSocialFilter"></div>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Tipo de Venta</div>
+                <input type="text" class="filter-search" data-target="tipoVentaFilter" placeholder="Buscar tipo de venta...">
                 <div class="filter-select" id="tipoVentaFilter"></div>
             </div>
 
@@ -1716,6 +1741,24 @@
         // EVENT LISTENERS
         // ============================================
         function initEventListeners() {
+            // Buscadores de filtros del sidebar
+            document.querySelectorAll('.filter-search').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const targetId = input.dataset.target;
+                    const container = document.getElementById(targetId);
+                    if (!container) return;
+                    const term = e.target.value.trim().toLowerCase();
+                    container.querySelectorAll('.filter-option').forEach(option => {
+                        const text = option.textContent.toLowerCase();
+                        if (term === '' || text.includes(term)) {
+                            option.classList.remove('hidden');
+                        } else {
+                            option.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
             // Quick period buttons
             document.querySelectorAll('.quick-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
