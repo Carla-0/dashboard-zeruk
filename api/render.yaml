@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: dashboard-zeruk-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app
+    envVars:
+      - key: DB_HOST
+        value: 34.125.156.253
+      - key: DB_NAME
+        value: zeruk
+      - key: DB_USER
+        value: mantenedor
+      - key: DB_PASSWORD
+        value: DDI!dev%2024
+      - key: DB_PORT
+        value: "3306"

@@ -1,0 +1,4 @@
+flask==3.*
+flask-cors==4.*
+pymysql==1.*
+gunicorn==22.*

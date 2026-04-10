@@ -820,6 +820,10 @@
             })
         };
 
+        // URL de la API - Cambiar después del despliegue
+        const API_URL = 'API_URL_PLACEHOLDER';
+        const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutos en milisegundos
+
         let state = {
             rawData: [],
             filteredData: [],
@@ -1018,19 +1022,58 @@
             return labels[field] || field;
         }
 
-        async function loadData() {
+        async function loadData(isRefresh = false) {
             try {
-                const response = await fetch('dashboard_data.json');
-                if (!response.ok) {
-                    throw new Error('No se pudo cargar dashboard_data.json');
+                // Intentar cargar desde la API en la nube
+                let data;
+                if (API_URL && API_URL !== 'API_URL_PLACEHOLDER') {
+                    const response = await fetch(API_URL);
+                    if (!response.ok) throw new Error('API no disponible');
+                    data = await response.json();
+                } else {
+                    // Fallback: cargar desde archivo local
+                    const response = await fetch('dashboard_data.json');
+                    if (!response.ok) throw new Error('No se pudo cargar dashboard_data.json');
+                    data = await response.json();
                 }
-                const data = await response.json();
+
                 state.rawData = data.data || [];
-                showMapperModal(data.metadata?.columns || Object.keys(state.rawData[0] || {}));
+
+                if (!isRefresh) {
+                    // Primera carga: mostrar modal de mapeo si es necesario
+                    showMapperModal(data.metadata?.columns || Object.keys(state.rawData[0] || {}));
+                } else {
+                    // Refresco: re-aplicar mapeo existente y actualizar
+                    if (state.columnMapping) {
+                        processData();
+                        updateLastRefresh();
+                    }
+                }
             } catch (error) {
-                console.warn('Usando datos de demo:', error.message);
-                generateDemoData();
+                if (!isRefresh) {
+                    console.warn('Usando datos de demo:', error.message);
+                    generateDemoData();
+                } else {
+                    console.warn('Error al refrescar datos:', error.message);
+                }
             }
+        }
+
+        function updateLastRefresh() {
+            let badge = document.getElementById('refreshBadge');
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.id = 'refreshBadge';
+                badge.style.cssText = 'font-size:11px;opacity:0.8;color:white;';
+                const headerRight = document.getElementById('headerRight');
+                if (headerRight) headerRight.prepend(badge);
+            }
+            const now = new Date();
+            badge.textContent = 'Actualizado: ' + now.toLocaleTimeString('es-PE');
+        }
+
+        function startAutoRefresh() {
+            setInterval(() => loadData(true), REFRESH_INTERVAL);
         }
 
         function generateDemoData() {
@@ -1921,6 +1964,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
             initEventListeners();
+            startAutoRefresh();
         });
     </script>
 </body>
