@@ -203,6 +203,30 @@
             display: none;
         }
 
+        .filter-actions {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .filter-actions button {
+            flex: 1;
+            padding: 4px 8px;
+            font-size: 11px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f5f5f5;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-actions button:hover {
+            background: #00bcd4;
+            color: white;
+            border-color: #00bcd4;
+        }
+
         .filter-option {
             display: flex;
             align-items: center;
@@ -716,30 +740,50 @@
             <div class="sidebar-section">
                 <div class="sidebar-title">Aseguradora</div>
                 <input type="text" class="filter-search" data-target="aseguradoraFilter" placeholder="Buscar aseguradora...">
+                <div class="filter-actions">
+                    <button onclick="selectAllFilter('aseguradora')">Todos</button>
+                    <button onclick="deselectAllFilter('aseguradora')">Ninguno</button>
+                </div>
                 <div class="filter-select" id="aseguradoraFilter"></div>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Productor</div>
                 <input type="text" class="filter-search" data-target="producerFilter" placeholder="Buscar productor...">
+                <div class="filter-actions">
+                    <button onclick="selectAllFilter('producer')">Todos</button>
+                    <button onclick="deselectAllFilter('producer')">Ninguno</button>
+                </div>
                 <div class="filter-select" id="producerFilter"></div>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Ramo</div>
                 <input type="text" class="filter-search" data-target="ramoFilter" placeholder="Buscar ramo...">
+                <div class="filter-actions">
+                    <button onclick="selectAllFilter('ramo')">Todos</button>
+                    <button onclick="deselectAllFilter('ramo')">Ninguno</button>
+                </div>
                 <div class="filter-select" id="ramoFilter"></div>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Razón Social</div>
                 <input type="text" class="filter-search" data-target="razonSocialFilter" placeholder="Buscar razón social...">
+                <div class="filter-actions">
+                    <button onclick="selectAllFilter('razonSocial')">Todos</button>
+                    <button onclick="deselectAllFilter('razonSocial')">Ninguno</button>
+                </div>
                 <div class="filter-select" id="razonSocialFilter"></div>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Tipo de Venta</div>
                 <input type="text" class="filter-search" data-target="tipoVentaFilter" placeholder="Buscar tipo de venta...">
+                <div class="filter-actions">
+                    <button onclick="selectAllFilter('tipoVenta')">Todos</button>
+                    <button onclick="deselectAllFilter('tipoVenta')">Ninguno</button>
+                </div>
                 <div class="filter-select" id="tipoVentaFilter"></div>
             </div>
 
@@ -1773,6 +1817,36 @@
                     container.appendChild(label);
                 });
             });
+        }
+
+        function selectAllFilter(field) {
+            const container = document.getElementById(`${field}Filter`);
+            const visibleValues = [];
+            container.querySelectorAll('.filter-option:not(.hidden)').forEach(option => {
+                const cb = option.querySelector('input[type="checkbox"]');
+                cb.checked = true;
+                visibleValues.push(cb.value);
+            });
+            // Agregar los visibles que no estén ya en el filtro
+            visibleValues.forEach(v => {
+                if (!state.filters[field].includes(v)) {
+                    state.filters[field].push(v);
+                }
+            });
+            applyFilters();
+        }
+
+        function deselectAllFilter(field) {
+            const container = document.getElementById(`${field}Filter`);
+            const visibleValues = [];
+            container.querySelectorAll('.filter-option:not(.hidden)').forEach(option => {
+                const cb = option.querySelector('input[type="checkbox"]');
+                cb.checked = false;
+                visibleValues.push(cb.value);
+            });
+            // Quitar los visibles del filtro
+            state.filters[field] = state.filters[field].filter(v => !visibleValues.includes(v));
+            applyFilters();
         }
 
         function updateDashboard() {
